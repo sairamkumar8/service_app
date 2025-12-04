@@ -87,19 +87,49 @@ def get_user(db: Session, user_id: int):
 
 
 # ---------------------------------------------------
-# UPDATE USER (only basic fields)
+# UPDATE USER (user and his related records)
 # ---------------------------------------------------
-def update_user(db: Session, user_id: int, user_in: schemas.UserUpdate):
-    user = get_user(db, user_id)
+def update_user(db: Session, user_id: int, data: schemas.UserUpdate):
+    # 1. Get user
+    user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         return None
 
-    for field, value in user_in.dict(exclude_unset=True).items():
+    # 2. Update user basic fields (ignore nested lists)
+    for field, value in data.dict(exclude_unset=True, exclude={"employment", "bank_info"}).items():
         setattr(user, field, value)
 
+    # 3. Update employment records
+    if data.employment:
+        for emp_update in data.employment:
+            emp = db.query(models.EmploymentInfo).filter(
+                models.EmploymentInfo.id == emp_update.id,
+                models.EmploymentInfo.user_id == user_id
+            ).first()
+
+            if emp:
+                for field, value in emp_update.dict(exclude_unset=True).items():
+                    if field != "id":
+                        setattr(emp, field, value)
+
+    # 4. Update bank records
+    if data.bank_info:
+        for bank_update in data.bank_info:
+            bank = db.query(models.UserBankInfo).filter(
+                models.UserBankInfo.id == bank_update.id,
+                models.UserBankInfo.user_id == user_id
+            ).first()
+
+            if bank:
+                for field, value in bank_update.dict(exclude_unset=True).items():
+                    if field != "id":
+                        setattr(bank, field, value)
+
+    # 5. Save changes
     db.commit()
     db.refresh(user)
     return user
+
 
 
 
@@ -130,6 +160,21 @@ def add_employment(db: Session, user_id: int, emp_in: schemas.EmploymentInfoCrea
         is_current=emp_in.is_current
     )
     db.add(employment)
+    db.commit()
+    db.refresh(employment)
+    return employment
+
+def update_employment(db: Session, emp_id: int, emp_in: schemas.EmploymentInfoUpdate):
+    # Find employment row
+    employment = db.query(models.EmploymentInfo).filter(models.EmploymentInfo.id == emp_id).first()
+    
+    if not employment:
+        return None
+
+    # Update only fields provided in JSON
+    for field, value in emp_in.dict(exclude_unset=True).items():
+        setattr(employment, field, value)
+
     db.commit()
     db.refresh(employment)
     return employment

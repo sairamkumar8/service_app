@@ -24,7 +24,30 @@ class EmploymentInfoResponse(EmploymentInfoBase):
     class Config:
         orm_mode = True
 
+# -------------------------
+# Employment Update Schema
+# -------------------------
+class EmploymentInfoUpdate(BaseModel):
+    company_name: str | None = None
+    designation: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    is_current: bool | None = None
 
+    class Config:
+        from_attributes = True
+
+class EmploymentInfoUpdateFull(BaseModel):
+    id: int
+    company_name: str | None = None
+    designation: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    is_current: bool | None = None
+
+    class Config:
+        from_attributes = True
+        
 # -------------------------
 # Bank Info Schemas
 # -------------------------
@@ -33,6 +56,17 @@ class BankInfoBase(BaseModel):
     account_number: str
     ifsc: str
     account_type: str
+
+class BankInfoUpdateFull(BaseModel):
+    id: int
+    bank_name: str | None = None
+    account_number: str | None = None
+    ifsc: str | None = None
+    account_type: str | None = None
+
+    class Config:
+        from_attributes = True
+
 
 
 class BankInfoCreate(BankInfoBase):
@@ -65,8 +99,24 @@ class UserCreate(UserBase):
     bank_info: List[BankInfoCreate]
 
 
-class UserUpdate(UserBase):
-    pass
+class UserUpdate(BaseModel):
+    # basic user fields (optional)
+    first_name: str | None = None
+    last_name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    address_line1: str | None = None
+    city: str | None = None
+    state: str | None = None
+    pincode: str | None = None
+
+    # nested updates
+    employment: list[EmploymentInfoUpdateFull] | None = None
+    bank_info: list[BankInfoUpdateFull] | None = None
+
+    class Config:
+        from_attributes = True
+
 
 
 class UserResponse(UserBase):

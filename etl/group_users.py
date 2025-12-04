@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 etl/group_users.py
 

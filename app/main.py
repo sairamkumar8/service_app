@@ -61,11 +61,12 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 # 4. UPDATE USER
 # -----------------------------------------------------------
 @app.put("/users/{user_id}", response_model=schemas.UserResponse)
-def update_user(user_id: int, user_in: schemas.UserUpdate, db: Session = Depends(get_db)):
-    updated = crud.update_user(db, user_id, user_in)
+def update_user_api(user_id: int, data: schemas.UserUpdate, db: Session = Depends(get_db)):
+    updated = crud.update_user(db, user_id, data)
     if not updated:
         raise HTTPException(status_code=404, detail="User not found")
     return updated
+
 
 
 # -----------------------------------------------------------
@@ -101,3 +102,13 @@ def add_bank(user_id: int, bank_in: schemas.BankInfoCreate, db: Session = Depend
         raise HTTPException(status_code=404, detail="User not found")
 
     return crud.add_bank(db, user_id, bank_in)
+
+# 8. UPDATE EMPLOYMENT INFO FOR A USER
+# ------------------------------------------------------------ 
+@app.put("/employment/{emp_id}", response_model=schemas.EmploymentInfoResponse)
+def update_employment_api(emp_id: int, emp_in: schemas.EmploymentInfoUpdate, db: Session = Depends(get_db)):
+    updated = crud.update_employment(db, emp_id, emp_in)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Employment record not found")
+    return updated
+
